@@ -5,7 +5,21 @@ struct HomeView: View {
     @State var library = PhotoLibraryManager()
     @State var settings = AppSettings()
     @State private var showSettings = false
-    @State private var selectedTab = 0
+    @State private var filter: MediaFilter = .all
+    
+    enum MediaFilter: String, CaseIterable {
+        case glasses = "Glasses"
+        case all = "All"
+    }
+    
+    private var filteredItems: [MediaItem] {
+        switch filter {
+        case .glasses:
+            return library.smartGlassesItems
+        case .all:
+            return library.mediaItems
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -40,10 +54,18 @@ struct HomeView: View {
         }
         .tint(.white)
         .task {
-            if library.authorizationStatus == .notDetermined {
+            // Re-check current status in case user granted permission externally
+            library.checkCurrentAuthorization()
+            
+            switch library.authorizationStatus {
+            case .notDetermined:
                 await library.requestAuthorization()
-            } else if library.authorizationStatus == .authorized || library.authorizationStatus == .limited {
-                await library.fetchMedia()
+            case .authorized, .limited:
+                if library.mediaItems.isEmpty {
+                    await library.fetchMedia()
+                }
+            default:
+                break
             }
         }
     }

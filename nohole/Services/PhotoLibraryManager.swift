@@ -10,6 +10,11 @@ final class PhotoLibraryManager {
     var otherItems: [MediaItem] = []
     var isLoading: Bool = false
     
+    init() {
+        // Check current status on init so we don't show the request screen unnecessarily
+        self.authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    }
+    
     func requestAuthorization() async {
         let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
         await MainActor.run {
@@ -18,6 +23,11 @@ final class PhotoLibraryManager {
         if status == .authorized || status == .limited {
             await fetchMedia()
         }
+    }
+    
+    func checkCurrentAuthorization() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        self.authorizationStatus = status
     }
     
     func fetchMedia() async {
@@ -42,33 +52,27 @@ final class PhotoLibraryManager {
             assets.append(asset)
         }
         
-        // Step 3: Classify using album membership + video resolution
+        // Step 3: Fast classify using album membership only (no I/O)
         var allItems: [MediaItem] = []
         var glasses: [MediaItem] = []
         var other: [MediaItem] = []
-        var photoCandidates: [(index: Int, asset: PHAsset)] = []
+        var uncheckdCandidates: [(index: Int, asset: PHAsset)] = []
         
         for asset in assets {
-            // Album match is the strongest signal
             let inMetaAlbum = metaAlbumIDs.contains(asset.localIdentifier)
-            let videoMatch = SmartGlassesDetector.isSmartGlassesMedia(asset)
-            let filenameMatch = SmartGlassesDetector.checkFilenameForSmartGlasses(asset: asset)
-            let isGlasses = inMetaAlbum || videoMatch || filenameMatch
             
             let item = MediaItem(
                 id: asset.localIdentifier,
                 asset: asset,
-                isSmartGlasses: isGlasses
+                isSmartGlasses: inMetaAlbum
             )
             allItems.append(item)
             
-            if isGlasses {
+            if inMetaAlbum {
                 glasses.append(item)
-            } else if asset.mediaType == .image {
-                // Could be smart glasses photo — need deeper EXIF check
-                photoCandidates.append((index: allItems.count - 1, asset: asset))
-                other.append(item)
             } else {
+                // Not in album — might still be glasses content, check later off main thread
+                uncheckdCandidates.append((index: allItems.count - 1, asset: asset))
                 other.append(item)
             }
         }
@@ -81,20 +85,28 @@ final class PhotoLibraryManager {
             self.isLoading = false
         }
         
-        // Run EXIF checks on photo candidates in batches
-        let batchSize = 10
+        // Second pass: filename + EXIF checks off main thread for candidates not in Meta album
+        let batchSize = 20
         var foundGlasses: [MediaItem] = []
         var foundGlassesIDs: Set<String> = []
         
-        for batchStart in stride(from: 0, to: photoCandidates.count, by: batchSize) {
-            let batchEnd = min(batchStart + batchSize, photoCandidates.count)
-            let batch = photoCandidates[batchStart..<batchEnd]
+        for batchStart in stride(from: 0, to: uncheckdCandidates.count, by: batchSize) {
+            let batchEnd = min(batchStart + batchSize, uncheckdCandidates.count)
+            let batch = uncheckdCandidates[batchStart..<batchEnd]
             
             await withTaskGroup(of: (Int, Bool).self) { group in
                 for candidate in batch {
                     group.addTask {
-                        let isGlasses = await SmartGlassesDetector.checkEXIFForSmartGlasses(asset: candidate.asset)
-                        return (candidate.index, isGlasses)
+                        // Quick filename check first (accesses PHAssetResource off main thread)
+                        if SmartGlassesDetector.checkFilenameForSmartGlasses(asset: candidate.asset) {
+                            return (candidate.index, true)
+                        }
+                        // Deeper EXIF check for photos only
+                        if candidate.asset.mediaType == .image {
+                            let isGlasses = await SmartGlassesDetector.checkEXIFForSmartGlasses(asset: candidate.asset)
+                            return (candidate.index, isGlasses)
+                        }
+                        return (candidate.index, false)
                     }
                 }
                 
@@ -113,7 +125,7 @@ final class PhotoLibraryManager {
             }
         }
         
-        // Update lists if any glasses photos were found via EXIF
+        // Update lists if any glasses content was found via filename/EXIF
         if !foundGlasses.isEmpty {
             let updatedGlasses = glasses + foundGlasses
             let updatedOther = other.filter { !foundGlassesIDs.contains($0.id) }
