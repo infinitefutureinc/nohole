@@ -73,15 +73,7 @@ struct MediaPreviewView: View {
         }
         .navigationTitle(item.isSmartGlasses ? "Smart Glasses" : "Media")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if item.isSmartGlasses {
-                    Label("Smart Glasses", systemImage: "eyeglasses")
-                        .foregroundStyle(Color.accentColor)
-                        .labelStyle(.iconOnly)
-                }
-            }
-        }
+        
         .sheet(isPresented: $showShareSheet) {
             if !shareItems.isEmpty {
                 ShareSheet(items: shareItems)
