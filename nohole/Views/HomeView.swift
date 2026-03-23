@@ -12,12 +12,21 @@ struct HomeView: View {
         case all = "All"
     }
     
+    // Filter to photos only until video processing is supported
+    private var photosOnlySmartGlasses: [MediaItem] {
+        library.smartGlassesItems.filter { $0.isPhoto }
+    }
+    
+    private var photosOnlyOther: [MediaItem] {
+        library.otherItems.filter { $0.isPhoto }
+    }
+    
     private var filteredItems: [MediaItem] {
         switch filter {
         case .glasses:
-            return library.smartGlassesItems
+            return photosOnlySmartGlasses
         case .all:
-            return library.mediaItems
+            return library.mediaItems.filter { $0.isPhoto }
         }
     }
     
@@ -85,36 +94,38 @@ struct HomeView: View {
                         .padding(.top, 40)
                 } else {
                     // Smart glasses section
-                    if !library.smartGlassesItems.isEmpty {
+                    if !photosOnlySmartGlasses.isEmpty {
                         sectionHeader(
                             title: "Smart Glasses",
                             icon: "eyeglasses",
-                            count: library.smartGlassesItems.count
+                            count: photosOnlySmartGlasses.count
                         )
                         MediaGridView(
-                            items: library.smartGlassesItems,
+                            items: photosOnlySmartGlasses,
                             title: "Smart Glasses",
                             library: library
                         )
                     }
                     
-                    // All media section
-                    sectionHeader(
-                        title: "All Media",
-                        icon: "photo.on.rectangle",
-                        count: library.otherItems.count
-                    )
-                    MediaGridView(
-                        items: library.otherItems,
-                        title: "All Media",
-                        library: library
-                    )
+                    // All photos section
+                    if !photosOnlyOther.isEmpty {
+                        sectionHeader(
+                            title: "All Photos",
+                            icon: "photo.on.rectangle",
+                            count: photosOnlyOther.count
+                        )
+                        MediaGridView(
+                            items: photosOnlyOther,
+                            title: "All Photos",
+                            library: library
+                        )
+                    }
                     
-                    if library.mediaItems.isEmpty {
+                    if photosOnlySmartGlasses.isEmpty && photosOnlyOther.isEmpty {
                         ContentUnavailableView(
-                            "No Media",
+                            "No Photos",
                             systemImage: "photo.badge.exclamationmark",
-                            description: Text("No photos or videos found in your library.")
+                            description: Text("No photos found in your library.")
                         )
                         .padding(.top, 40)
                     }

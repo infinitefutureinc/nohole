@@ -21,25 +21,10 @@ struct SettingsView: View {
                             .tint(Color.accentColor)
                     }
                     
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Blur Style")
-                        
+                    Picker("Blur Style", selection: $settings.blurStyle) {
                         ForEach(BlurStyle.allCases) { style in
-                            Button {
-                                settings.blurStyle = style
-                            } label: {
-                                HStack {
-                                    Image(systemName: style.iconName)
-                                        .frame(width: 24)
-                                    Text(style.rawValue)
-                                    Spacer()
-                                    if settings.blurStyle == style {
-                                        Image(systemName: "checkmark")
-                                            .foregroundStyle(Color.accentColor)
-                                    }
-                                }
-                                .foregroundStyle(.white)
-                            }
+                            Label(style.rawValue, systemImage: style.iconName)
+                                .tag(style)
                         }
                     }
                     

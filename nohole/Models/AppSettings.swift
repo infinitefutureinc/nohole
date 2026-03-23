@@ -18,9 +18,9 @@ final class AppSettings {
     
     init() {
         let defaults = UserDefaults.standard
-        self.blurIntensity = defaults.object(forKey: "blurIntensity") as? Double ?? 30.0
+        self.blurIntensity = defaults.object(forKey: "blurIntensity") as? Double ?? 50.0
         self.blurStyle = BlurStyle(rawValue: defaults.string(forKey: "blurStyle") ?? "") ?? .gaussian
-        self.selectiveBlurEnabled = defaults.bool(forKey: "selectiveBlurEnabled")
+        self.selectiveBlurEnabled = defaults.object(forKey: "selectiveBlurEnabled") as? Bool ?? true
         self.maskScale = defaults.object(forKey: "maskScale") as? Double ?? 1.3
     }
 }
