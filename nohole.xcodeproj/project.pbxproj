@@ -256,6 +256,7 @@
 				DEVELOPMENT_TEAM = YF9NFZN8G5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = NoGlasshole;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "No​Hole needs to save blurred photos and videos to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "No​Hole needs access to your photos to detect and blur faces. ​All processing happens on​-device.";
@@ -295,6 +296,7 @@
 				DEVELOPMENT_TEAM = YF9NFZN8G5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = NoGlasshole;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "No​Hole needs to save blurred photos and videos to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "No​Hole needs access to your photos to detect and blur faces. ​All processing happens on​-device.";
