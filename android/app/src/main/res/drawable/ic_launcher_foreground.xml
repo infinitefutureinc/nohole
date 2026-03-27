@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NoGlasshole icon: glasses silhouette with a blur/block overlay -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Glasses frame -->
+    <path
+        android:fillColor="#FFE600"
+        android:pathData="M20,52 C20,42 28,34 38,34 C45,34 51,38 54,44 C57,38 63,34 70,34 C80,34 88,42 88,52 C88,62 80,70 70,70 C63,70 57,66 54,60 C51,66 45,70 38,70 C28,70 20,62 20,52 Z M38,40 C31,40 26,45 26,52 C26,59 31,64 38,64 C45,64 50,59 50,52 C50,45 45,40 38,40 Z M70,40 C63,40 58,45 58,52 C58,59 63,64 70,64 C77,64 82,59 82,52 C82,45 77,40 70,40 Z" />
+
+    <!-- Bridge -->
+    <path
+        android:fillColor="#FFE600"
+        android:pathData="M50,52 L58,52 C58,51 57,50 56,50 L52,50 C51,50 50,51 50,52 Z" />
+
+    <!-- Slash — the "No" indicator -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M24,32 L84,72"
+        android:strokeColor="#FF3B30"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+</vector>
