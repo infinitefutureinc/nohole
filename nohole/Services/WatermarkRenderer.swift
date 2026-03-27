@@ -10,7 +10,7 @@ struct WatermarkRenderer {
         return renderer.image { context in
             image.draw(at: .zero)
             
-            let text = "nohole.app"
+            let text = "NoGlasshole"
             let fontSize = max(image.size.width * 0.025, 14)
             
             let attributes: [NSAttributedString.Key: Any] = [
@@ -44,7 +44,7 @@ struct WatermarkRenderer {
             UIColor.clear.setFill()
             context.fill(CGRect(origin: .zero, size: size))
             
-            let text = "nohole.app"
+            let text = "NoGlasshole"
             let fontSize = max(size.width * 0.025, 14)
             
             let attributes: [NSAttributedString.Key: Any] = [

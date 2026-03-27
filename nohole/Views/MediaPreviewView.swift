@@ -12,10 +12,9 @@ struct MediaPreviewView: View {
     @State private var detectedFaces: [DetectedFace] = []
     @State private var isProcessing = false
     @State private var isSaving = false
-    @State private var showShareSheet = false
     @State private var savedSuccessfully = false
     @State private var errorMessage: String?
-    @State private var shareItems: [Any] = []
+    @State private var shareItem: ShareableItem?
     
     // Video states
     @State private var videoProcessor = VideoBlurProcessor()
@@ -74,10 +73,8 @@ struct MediaPreviewView: View {
         .navigationTitle(item.isSmartGlasses ? "Smart Glasses" : "Media")
         .navigationBarTitleDisplayMode(.inline)
         
-        .sheet(isPresented: $showShareSheet) {
-            if !shareItems.isEmpty {
-                ShareSheet(items: shareItems)
-            }
+        .sheet(item: $shareItem) { item in
+            ShareSheet(items: item.items)
         }
         .task {
             await loadMedia()
@@ -348,13 +345,16 @@ struct MediaPreviewView: View {
     
     private func prepareShare() {
         if item.isPhoto, let image = blurredImage {
-            shareItems = [image]
-            showShareSheet = true
+            shareItem = ShareableItem(items: [image])
         } else if let url = processedVideoURL {
-            shareItems = [url]
-            showShareSheet = true
+            shareItem = ShareableItem(items: [url])
         }
     }
+}
+
+struct ShareableItem: Identifiable {
+    let id = UUID()
+    let items: [Any]
 }
 
 struct ShareSheet: UIViewControllerRepresentable {
