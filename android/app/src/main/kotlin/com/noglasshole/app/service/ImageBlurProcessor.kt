@@ -228,11 +228,13 @@ object ImageBlurProcessor {
     }
 
     private fun buildEllipticalGradient(rect: RectF): RadialGradient {
+        // Use max(w,h)/2 as radius; stops go to 1.0 (edge of radius circle).
+        // The feather starts at 70% and ends at 100% of the radius.
         val radius = maxOf(rect.width(), rect.height()) / 2f
         return RadialGradient(
             rect.centerX(), rect.centerY(), radius,
             intArrayOf(Color.WHITE, Color.WHITE, Color.TRANSPARENT),
-            floatArrayOf(0f, 0.7f, 1.1f.coerceAtMost(1f)),
+            floatArrayOf(0f, 0.7f, 1f),
             Shader.TileMode.CLAMP
         )
     }
