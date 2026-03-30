@@ -6,6 +6,7 @@ import CoreImage.CIFilterBuiltins
 struct ImageBlurProcessor {
     
     private static let context = CIContext(options: [.useSoftwareRenderer: false])
+    private static let videoGaussianDownsampleFactor: CGFloat = 0.35
     
     /// Apply face blur to a UIImage with given settings
     static func blurFaces(
@@ -48,7 +49,8 @@ struct ImageBlurProcessor {
             style: style,
             intensity: intensity,
             maskScale: maskScale,
-            imageSize: imageSize
+            imageSize: imageSize,
+            prefersFastGaussian: true
         )
     }
     
@@ -58,58 +60,91 @@ struct ImageBlurProcessor {
         style: BlurStyle,
         intensity: Double,
         maskScale: Double,
-        imageSize: CGSize
+        imageSize: CGSize,
+        prefersFastGaussian: Bool = false
     ) -> CIImage? {
         let activeFaces = faces.filter { $0.isBlurred }
         guard !activeFaces.isEmpty else { return ciImage }
-        
-        var result = ciImage
-        
-        for face in activeFaces {
-            // Convert normalized Vision coordinates to image coordinates
-            // Vision uses bottom-left origin, same as Core Image
+
+        let scaledRects = activeFaces.map { face in
+            // Convert normalized Vision coordinates to image coordinates.
+            // Vision uses bottom-left origin, same as Core Image.
             let faceRect = CGRect(
                 x: face.boundingBox.origin.x * imageSize.width,
                 y: face.boundingBox.origin.y * imageSize.height,
                 width: face.boundingBox.width * imageSize.width,
                 height: face.boundingBox.height * imageSize.height
             )
-            
-            // Scale the mask to ensure full coverage (hair, ears)
-            let scaledRect = faceRect.insetBy(
+
+            // Scale the mask to ensure full coverage (hair, ears).
+            return faceRect.insetBy(
                 dx: -faceRect.width * (maskScale - 1.0) / 2.0,
                 dy: -faceRect.height * (maskScale - 1.0) / 2.0
             )
-            
-            switch style {
-            case .gaussian:
-                result = applyGaussianBlur(to: result, in: scaledRect, intensity: intensity)
-            case .pixelate:
-                result = applyPixelate(to: result, in: scaledRect, intensity: intensity)
-            case .solidBlack:
-                result = applySolidBlack(to: result, in: scaledRect)
-            }
         }
-        
-        return result
+
+        switch style {
+        case .gaussian:
+            return applyGaussianBlur(
+                to: ciImage,
+                in: scaledRects,
+                intensity: intensity,
+                downsampleFactor: prefersFastGaussian ? videoGaussianDownsampleFactor : 1.0
+            )
+        case .pixelate:
+            var result = ciImage
+            for scaledRect in scaledRects {
+                result = applyPixelate(to: result, in: scaledRect, intensity: intensity)
+            }
+            return result
+        case .solidBlack:
+            return applySolidBlack(to: ciImage, in: scaledRects)
+        }
     }
     
-    private static func applyGaussianBlur(to image: CIImage, in rect: CGRect, intensity: Double) -> CIImage {
-        // Create a blurred version of the full image
-        let clampedImage = image.clampedToExtent()
-        let blurred = clampedImage.applyingGaussianBlur(sigma: intensity)
-            .cropped(to: image.extent)
-        
-        // Create an elliptical mask for the face region
-        let mask = createEllipticalMask(in: rect, imageExtent: image.extent)
-        
-        // Composite: use blurred image where mask is white, original where mask is black
-        let blendFilter = CIFilter.blendWithMask()
-        blendFilter.inputImage = blurred
-        blendFilter.backgroundImage = image
-        blendFilter.maskImage = mask
-        
-        return blendFilter.outputImage ?? image
+    private static func applyGaussianBlur(
+        to image: CIImage,
+        in rects: [CGRect],
+        intensity: Double,
+        downsampleFactor: CGFloat
+    ) -> CIImage {
+        // Blur the frame once, then reuse it for each face mask.
+        let blurred: CIImage
+        if downsampleFactor < 1.0 {
+            let downsampled = image.transformed(
+                by: CGAffineTransform(scaleX: downsampleFactor, y: downsampleFactor)
+            )
+            let downsampledExtent = downsampled.extent.integral
+            let adjustedSigma = max(intensity * downsampleFactor, 1.0)
+
+            let blurredDownsampled = downsampled
+                .clampedToExtent()
+                .applyingGaussianBlur(sigma: adjustedSigma)
+                .cropped(to: downsampledExtent)
+
+            blurred = blurredDownsampled
+                .transformed(by: CGAffineTransform(scaleX: 1.0 / downsampleFactor, y: 1.0 / downsampleFactor))
+                .cropped(to: image.extent)
+        } else {
+            blurred = image
+                .clampedToExtent()
+                .applyingGaussianBlur(sigma: intensity)
+                .cropped(to: image.extent)
+        }
+
+        var result = image
+        for rect in rects {
+            let mask = createEllipticalMask(in: rect, imageExtent: image.extent)
+
+            let blendFilter = CIFilter.blendWithMask()
+            blendFilter.inputImage = blurred
+            blendFilter.backgroundImage = result
+            blendFilter.maskImage = mask
+
+            result = blendFilter.outputImage ?? result
+        }
+
+        return result
     }
     
     private static func applyPixelate(to image: CIImage, in rect: CGRect, intensity: Double) -> CIImage {
@@ -132,17 +167,22 @@ struct ImageBlurProcessor {
         return blendFilter.outputImage ?? image
     }
     
-    private static func applySolidBlack(to image: CIImage, in rect: CGRect) -> CIImage {
+    private static func applySolidBlack(to image: CIImage, in rects: [CGRect]) -> CIImage {
         let blackImage = CIImage(color: CIColor.black).cropped(to: image.extent)
-        
-        let mask = createEllipticalMask(in: rect, imageExtent: image.extent)
-        
-        let blendFilter = CIFilter.blendWithMask()
-        blendFilter.inputImage = blackImage
-        blendFilter.backgroundImage = image
-        blendFilter.maskImage = mask
-        
-        return blendFilter.outputImage ?? image
+
+        var result = image
+        for rect in rects {
+            let mask = createEllipticalMask(in: rect, imageExtent: image.extent)
+
+            let blendFilter = CIFilter.blendWithMask()
+            blendFilter.inputImage = blackImage
+            blendFilter.backgroundImage = result
+            blendFilter.maskImage = mask
+
+            result = blendFilter.outputImage ?? result
+        }
+
+        return result
     }
     
     private static func createEllipticalMask(in rect: CGRect, imageExtent: CGRect) -> CIImage {

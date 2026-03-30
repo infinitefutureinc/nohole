@@ -121,10 +121,22 @@ struct MediaPreviewView: View {
                     ProgressView(value: videoProcessor.progress)
                         .tint(Color.accentColor)
                         .padding(.horizontal)
-                    
+
                     Text("Processing video... \(Int(videoProcessor.progress * 100))%")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+
+                    Button {
+                        videoProcessor.cancel()
+                    } label: {
+                        Text("Cancel")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 8)
+                            .background(Color(.systemGray4))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
                 }
                 .frame(height: 200)
             } else {

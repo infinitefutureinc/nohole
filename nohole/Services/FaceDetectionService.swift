@@ -1,5 +1,6 @@
 import Foundation
 import Vision
+import CoreML
 import UIKit
 import CoreImage
 import ImageIO
@@ -69,6 +70,27 @@ struct FaceDetectionService {
             orientation: .up
         )
     }
+
+    /// Detect faces in a CVPixelBuffer, returning raw VNFaceObservation for tracking initialization
+    nonisolated static func detectFaceObservations(in pixelBuffer: CVPixelBuffer) throws -> [VNFaceObservation] {
+        let request = VNDetectFaceRectanglesRequest()
+        request.revision = VNDetectFaceRectanglesRequest.defaultRevision
+
+        do {
+            let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
+            try handler.perform([request])
+            return request.results ?? []
+        } catch {
+            if isInferenceContextCreationFailure(error) {
+                let cpuRequest = VNDetectFaceRectanglesRequest()
+                configureCPUComputeDevice(for: cpuRequest)
+                let cpuHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
+                try cpuHandler.perform([cpuRequest])
+                return cpuRequest.results ?? []
+            }
+            throw error
+        }
+    }
     
     /// Detect faces in a CIImage
     nonisolated static func detectFaces(in ciImage: CIImage) throws -> [DetectedFace] {
@@ -122,17 +144,33 @@ struct FaceDetectionService {
         request.revision = VNDetectFaceRectanglesRequest.defaultRevision
         
         if usesCPUOnly {
-            request.usesCPUOnly = true
+            configureCPUComputeDevice(for: request)
         }
 
         try handler.perform([request])
 
-        let results = request.results as? [VNFaceObservation] ?? []
+        let results = request.results ?? []
         return results.map { observation in
             DetectedFace(
                 boundingBox: observation.boundingBox,
                 confidence: observation.confidence
             )
+        }
+    }
+
+    nonisolated private static func configureCPUComputeDevice(for request: VNRequest) {
+        if #available(iOS 17.0, *) {
+            request.setComputeDevice(cpuComputeDevice, for: .main)
+        }
+    }
+
+    @available(iOS 17.0, *)
+    nonisolated private static var cpuComputeDevice: MLComputeDevice? {
+        MLComputeDevice.allComputeDevices.first { device in
+            if case .cpu = device {
+                return true
+            }
+            return false
         }
     }
 
@@ -192,7 +230,7 @@ struct FaceDetectionService {
 }
 
 private extension CGImagePropertyOrientation {
-    init(_ orientation: UIImage.Orientation) {
+    nonisolated init(_ orientation: UIImage.Orientation) {
         switch orientation {
         case .up:
             self = .up

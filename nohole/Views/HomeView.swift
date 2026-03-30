@@ -12,21 +12,12 @@ struct HomeView: View {
         case all = "All"
     }
     
-    // Filter to photos only until video processing is supported
-    private var photosOnlySmartGlasses: [MediaItem] {
-        library.smartGlassesItems.filter { $0.isPhoto }
-    }
-    
-    private var photosOnlyOther: [MediaItem] {
-        library.otherItems.filter { $0.isPhoto }
-    }
-    
     private var filteredItems: [MediaItem] {
         switch filter {
         case .glasses:
-            return photosOnlySmartGlasses
+            return library.smartGlassesItems
         case .all:
-            return library.mediaItems.filter { $0.isPhoto }
+            return library.mediaItems
         }
     }
     
@@ -94,38 +85,38 @@ struct HomeView: View {
                         .padding(.top, 40)
                 } else {
                     // Smart glasses section
-                    if !photosOnlySmartGlasses.isEmpty {
+                    if !library.smartGlassesItems.isEmpty {
                         sectionHeader(
                             title: "Smart Glasses",
                             icon: "eyeglasses",
-                            count: photosOnlySmartGlasses.count
+                            count: library.smartGlassesItems.count
                         )
                         MediaGridView(
-                            items: photosOnlySmartGlasses,
+                            items: library.smartGlassesItems,
                             title: "Smart Glasses",
                             library: library
                         )
                     }
-                    
-                    // All photos section
-                    if !photosOnlyOther.isEmpty {
+
+                    // All media section
+                    if !library.otherItems.isEmpty {
                         sectionHeader(
-                            title: "All Photos",
+                            title: "All Media",
                             icon: "photo.on.rectangle",
-                            count: photosOnlyOther.count
+                            count: library.otherItems.count
                         )
                         MediaGridView(
-                            items: photosOnlyOther,
-                            title: "All Photos",
+                            items: library.otherItems,
+                            title: "All Media",
                             library: library
                         )
                     }
-                    
-                    if photosOnlySmartGlasses.isEmpty && photosOnlyOther.isEmpty {
+
+                    if library.smartGlassesItems.isEmpty && library.otherItems.isEmpty {
                         ContentUnavailableView(
-                            "No Photos",
+                            "No Media",
                             systemImage: "photo.badge.exclamationmark",
-                            description: Text("No photos found in your library.")
+                            description: Text("No photos or videos found in your library.")
                         )
                         .padding(.top, 40)
                     }
@@ -166,11 +157,11 @@ struct HomeView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.secondary)
             
-            Text("Photo Access Required")
+            Text("Media Access Required")
                 .font(.title2)
                 .fontWeight(.bold)
-            
-            Text("NoHole needs access to your photos to detect and blur faces. All processing happens on-device — nothing leaves your phone.")
+
+            Text("NoHole needs access to your photos and videos to detect and blur faces. All processing happens on-device — nothing leaves your phone.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 40)
@@ -206,7 +197,7 @@ struct HomeView: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text("Please enable photo access in Settings to use NoHole.")
+            Text("Please enable photo and video access in Settings to use NoHole.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 40)
