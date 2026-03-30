@@ -9,17 +9,7 @@ struct SettingsView: View {
             List {
                 // Blur settings
                 Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Blur Intensity")
-                            Spacer()
-                            Text("\(Int(settings.blurIntensity))")
-                                .foregroundStyle(.secondary)
-                                .font(.subheadline.monospacedDigit())
-                        }
-                        Slider(value: $settings.blurIntensity, in: 5...60, step: 1)
-                            .tint(Color.accentColor)
-                    }
+                    blurAmountControl
                     
                     Picker("Blur Style", selection: $settings.blurStyle) {
                         ForEach(BlurStyle.allCases) { style in
@@ -101,6 +91,46 @@ struct SettingsView: View {
                     .fontWeight(.semibold)
                 }
             }
+        }
+    }
+}
+
+private extension SettingsView {
+    @ViewBuilder
+    var blurAmountControl: some View {
+        switch settings.blurStyle {
+        case .gaussian:
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Blur Radius")
+                    Spacer()
+                    Text("\(Int(settings.gaussianBlurRadius))")
+                        .foregroundStyle(.secondary)
+                        .font(.subheadline.monospacedDigit())
+                }
+                Slider(value: $settings.gaussianBlurRadius, in: 10...80, step: 1)
+                    .tint(Color.accentColor)
+                Text("Higher values smear more facial detail.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        case .pixelate:
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Pixelation")
+                    Spacer()
+                    Text("\(Int(settings.blurIntensity))")
+                        .foregroundStyle(.secondary)
+                        .font(.subheadline.monospacedDigit())
+                }
+                Slider(value: $settings.blurIntensity, in: 5...60, step: 1)
+                    .tint(Color.accentColor)
+            }
+        case .solidBlack:
+            Text("Solid Black uses a full mask instead of a blur radius.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.vertical, 4)
         }
     }
 }

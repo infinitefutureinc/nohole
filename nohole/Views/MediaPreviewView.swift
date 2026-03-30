@@ -21,6 +21,15 @@ struct MediaPreviewView: View {
     @State private var processedVideoURL: URL?
     @State private var avAsset: AVAsset?
     @State private var player: AVPlayer?
+
+    private var blurAmount: Double {
+        switch settings.blurStyle {
+        case .gaussian:
+            return settings.gaussianBlurRadius
+        case .pixelate, .solidBlack:
+            return settings.blurIntensity
+        }
+    }
     
     var body: some View {
         ScrollView {
@@ -284,7 +293,7 @@ struct MediaPreviewView: View {
                 in: image,
                 faces: detectedFaces,
                 style: settings.blurStyle,
-                intensity: settings.blurIntensity,
+                intensity: blurAmount,
                 maskScale: settings.maskScale
             ) {
                 let watermarked = WatermarkRenderer.addWatermark(to: processed)
@@ -307,7 +316,7 @@ struct MediaPreviewView: View {
             in: image,
             faces: detectedFaces,
             style: settings.blurStyle,
-            intensity: settings.blurIntensity,
+            intensity: blurAmount,
             maskScale: settings.maskScale
         ) {
             blurredImage = WatermarkRenderer.addWatermark(to: processed)
@@ -324,7 +333,7 @@ struct MediaPreviewView: View {
             let outputURL = try await videoProcessor.processVideo(
                 asset: avAsset,
                 style: settings.blurStyle,
-                intensity: settings.blurIntensity,
+                intensity: blurAmount,
                 maskScale: settings.maskScale
             )
             
