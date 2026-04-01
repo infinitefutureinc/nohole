@@ -55,7 +55,7 @@ struct SettingsView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Text("NoHole")
+                            Text("NoGlasshole")
                                 .font(.title2)
                                 .fontWeight(.black)
                             Spacer()
