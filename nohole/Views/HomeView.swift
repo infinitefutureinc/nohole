@@ -5,23 +5,32 @@ struct HomeView: View {
     @State var library = PhotoLibraryManager()
     @State var settings = AppSettings()
     @State private var showSettings = false
-    @State private var filter: MediaFilter = .all
-    
-    enum MediaFilter: String, CaseIterable {
-        case glasses = "Glasses"
-        case all = "All"
+    @State private var selectedTab: Tab = .blur
+
+    enum Tab {
+        case blur, detect
     }
-    
-    private var filteredItems: [MediaItem] {
-        switch filter {
-        case .glasses:
-            return library.smartGlassesItems
-        case .all:
-            return library.mediaItems
-        }
-    }
-    
+
     var body: some View {
+        TabView(selection: $selectedTab) {
+            blurTab
+                .tabItem {
+                    Label("Blur", systemImage: "eye.slash.fill")
+                }
+                .tag(Tab.blur)
+
+            DetectView()
+                .tabItem {
+                    Label("Detect", systemImage: "antenna.radiowaves.left.and.right")
+                }
+                .tag(Tab.detect)
+        }
+        .tint(Color("AccentGreen"))
+    }
+
+    // MARK: - Blur Tab
+
+    private var blurTab: some View {
         NavigationStack {
             Group {
                 switch library.authorizationStatus {
@@ -33,7 +42,7 @@ struct HomeView: View {
                     requestAccessView
                 }
             }
-            .navigationTitle("NoHole")
+            .navigationTitle("NoGlasshole")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -56,7 +65,7 @@ struct HomeView: View {
         .task {
             // Re-check current status in case user granted permission externally
             library.checkCurrentAuthorization()
-            
+
             switch library.authorizationStatus {
             case .notDetermined:
                 await library.requestAuthorization()
@@ -161,7 +170,7 @@ struct HomeView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("NoHole needs access to your photos and videos to detect and blur faces. All processing happens on-device — nothing leaves your phone.")
+            Text("NoGlasshole needs access to your photos and videos to detect and blur faces. All processing happens on-device — nothing leaves your phone.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 40)
@@ -197,7 +206,7 @@ struct HomeView: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text("Please enable photo and video access in Settings to use NoHole.")
+            Text("Please enable photo and video access in Settings to use NoGlasshole.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 40)
