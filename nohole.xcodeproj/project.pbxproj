@@ -261,8 +261,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = NoGlasshole;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "No​Hole needs to save blurred photos and videos to your photo library.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "No​Hole needs access to your photos to detect and blur faces. ​All processing happens on​-device.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "NoGlasshole scans for nearby smart glasses using Bluetooth to help protect your privacy. All scanning happens on-device.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "NoGlasshole needs to save blurred photos and videos to your photo library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NoGlasshole needs access to your photos to detect and blur faces. All processing happens on-device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -302,8 +303,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = NoGlasshole;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "No​Hole needs to save blurred photos and videos to your photo library.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "No​Hole needs access to your photos to detect and blur faces. ​All processing happens on​-device.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "NoGlasshole scans for nearby smart glasses using Bluetooth to help protect your privacy. All scanning happens on-device.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "NoGlasshole needs to save blurred photos and videos to your photo library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NoGlasshole needs access to your photos to detect and blur faces. All processing happens on-device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
