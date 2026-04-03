@@ -11,10 +11,12 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
 
     private var centralManager: CBCentralManager?
     private var cooldownTimestamps: [String: Date] = [:]
+    private var wantsToScan: Bool = false
 
     // MARK: - Public
 
     func startScanning() {
+        wantsToScan = true
         if centralManager == nil {
             centralManager = CBCentralManager(delegate: self, queue: nil)
         } else if bluetoothState == .poweredOn {
@@ -23,6 +25,7 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
     }
 
     func stopScanning() {
+        wantsToScan = false
         centralManager?.stopScan()
         isScanning = false
     }
@@ -37,7 +40,7 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
     nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
         Task { @MainActor in
             self.bluetoothState = central.state
-            if central.state == .poweredOn && self.centralManager != nil {
+            if central.state == .poweredOn && self.wantsToScan {
                 self.beginScan()
             } else if central.state != .poweredOn {
                 self.isScanning = false

@@ -5,7 +5,7 @@ struct HomeView: View {
     @State var library = PhotoLibraryManager()
     @State var settings = AppSettings()
     @State private var showSettings = false
-    @State private var selectedTab: Tab = .blur
+    @State private var selectedTab: Tab = .detect
 
     enum Tab {
         case blur, detect
@@ -13,17 +13,17 @@ struct HomeView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            blurTab
-                .tabItem {
-                    Label("Blur", systemImage: "eye.slash.fill")
-                }
-                .tag(Tab.blur)
-
             DetectView()
                 .tabItem {
                     Label("Detect", systemImage: "antenna.radiowaves.left.and.right")
                 }
                 .tag(Tab.detect)
+
+            blurTab
+                .tabItem {
+                    Label("Blur", systemImage: "eye.slash.fill")
+                }
+                .tag(Tab.blur)
         }
         .tint(Color("AccentGreen"))
     }
@@ -42,7 +42,7 @@ struct HomeView: View {
                     requestAccessView
                 }
             }
-            .navigationTitle("NoGlasshole")
+            .navigationTitle("Blur")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -67,8 +67,6 @@ struct HomeView: View {
             library.checkCurrentAuthorization()
 
             switch library.authorizationStatus {
-            case .notDetermined:
-                await library.requestAuthorization()
             case .authorized, .limited:
                 if library.mediaItems.isEmpty {
                     await library.fetchMedia()
