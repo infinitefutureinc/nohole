@@ -10,9 +10,22 @@
 		D46A8D002F6E78BB00F1030D /* nohole.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nohole.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D481641C2FAB3DDC00476B95 /* Exceptions for "nohole" folder in "nohole" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D46A8CFF2F6E78BB00F1030D /* nohole */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D46A8D022F6E78BB00F1030D /* nohole */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D481641C2FAB3DDC00476B95 /* Exceptions for "nohole" folder in "nohole" target */,
+			);
 			path = nohole;
 			sourceTree = "<group>";
 		};
@@ -258,6 +271,7 @@
 				DEVELOPMENT_TEAM = YF9NFZN8G5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = nohole/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NoGlasshole;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
@@ -300,6 +314,7 @@
 				DEVELOPMENT_TEAM = YF9NFZN8G5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = nohole/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NoGlasshole;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
