@@ -37,8 +37,13 @@ struct WatermarkRenderer {
     
     /// Create a watermark CIImage overlay for video frames
     static func createWatermarkOverlay(for size: CGSize) -> CIImage? {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        
+        guard size.width > 0, size.height > 0 else { return nil }
+
+        let format = UIGraphicsImageRendererFormat.default()
+        format.opaque = false
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+
         let watermarkImage = renderer.image { context in
             // Transparent background
             UIColor.clear.setFill()

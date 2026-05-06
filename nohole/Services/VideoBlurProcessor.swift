@@ -126,7 +126,6 @@ final class VideoBlurProcessor {
         intensity: Double,
         maskScale: Double
     ) -> AVVideoComposition {
-        let watermarkOverlay = WatermarkRenderer.createWatermarkOverlay(for: renderSize)
         let faceStabilizer = TemporalFaceStabilizer()
 
         return AVVideoComposition(asset: asset) { [self] request in
@@ -151,8 +150,14 @@ final class VideoBlurProcessor {
                     maskScale: maskScale
                 ) ?? sourceImage
 
-                if let watermarkOverlay {
-                    processedImage = watermarkOverlay.composited(over: processedImage)
+                if let watermark = WatermarkRenderer.createWatermarkOverlay(for: sourceImage.extent.size) {
+                    let positioned = watermark.transformed(
+                        by: CGAffineTransform(
+                            translationX: sourceImage.extent.origin.x,
+                            y: sourceImage.extent.origin.y
+                        )
+                    )
+                    processedImage = positioned.composited(over: processedImage)
                 }
 
                 request.finish(with: processedImage.cropped(to: sourceImage.extent), context: self.ciContext)
