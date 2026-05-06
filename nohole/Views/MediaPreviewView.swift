@@ -57,8 +57,10 @@ struct MediaPreviewView: View {
                     selectiveBlurControls
                 }
                 
-                // Action buttons
-                actionButtons
+                // Action buttons — only when there's a processed result to act on
+                if (item.isPhoto && blurredImage != nil) || (item.isVideo && processedVideoURL != nil) {
+                    actionButtons
+                }
                 
                 if let error = errorMessage {
                     Text(error)

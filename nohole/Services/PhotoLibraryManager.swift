@@ -12,7 +12,12 @@ final class PhotoLibraryManager {
     
     init() {
         // Check current status on init so we don't show the request screen unnecessarily
-        self.authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        self.authorizationStatus = status
+        // Pre-arm loading so the UI doesn't flash an empty state before fetchMedia begins
+        if status == .authorized || status == .limited {
+            self.isLoading = true
+        }
     }
     
     func requestAuthorization() async {
