@@ -5,7 +5,7 @@ struct OnboardingView: View {
     @State private var currentStep: Int = 0
     @State private var advanceTrigger: Int = 0
 
-    private let totalSteps = 5
+    private let totalSteps = 7
 
     var body: some View {
         ZStack {
@@ -19,15 +19,19 @@ struct OnboardingView: View {
                 Group {
                     switch currentStep {
                     case 0:
-                        OnboardingHookView(onContinue: advance)
+                        OnboardingWelcomeView(onContinue: advance)
                     case 1:
-                        OnboardingDetectView(onContinue: advance)
+                        OnboardingHookView(onContinue: advance)
                     case 2:
-                        OnboardingBlurView(onContinue: advance)
+                        OnboardingDetectView(onContinue: advance)
                     case 3:
+                        OnboardingBlurView(onContinue: advance)
+                    case 4:
                         OnboardingBluetoothView(onContinue: advance)
+                    case 5:
+                        OnboardingPhotosView(onContinue: advance)
                     default:
-                        OnboardingPhotosView(onContinue: complete)
+                        OnboardingRatingView(onContinue: complete)
                     }
                 }
                 .id(currentStep)
