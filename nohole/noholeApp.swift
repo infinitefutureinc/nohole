@@ -2,10 +2,18 @@ import SwiftUI
 
 @main
 struct noholeApp: App {
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+
     var body: some Scene {
         WindowGroup {
-            HomeView()
-                .preferredColorScheme(.dark)
+            Group {
+                if hasCompletedOnboarding {
+                    HomeView()
+                } else {
+                    OnboardingView()
+                }
+            }
+            .preferredColorScheme(.dark)
         }
     }
 }
