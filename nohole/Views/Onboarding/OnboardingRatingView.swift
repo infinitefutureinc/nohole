@@ -8,14 +8,25 @@ struct OnboardingRatingView: View {
 
     @State private var starsAppeared: [Bool] = Array(repeating: false, count: 5)
     @State private var pulse: Bool = false
-    @State private var hasRated: Bool = false
+    @State private var labelAppeared: Bool = false
+    @State private var labelFloat: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            stars
-                .frame(height: 200)
+            VStack(spacing: 16) {
+                // "Rate 5 Stars" label above the stars with animation
+                Text("Rate 5 Stars")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Color("AccentGreen"))
+                    .opacity(labelAppeared ? 1 : 0)
+                    .offset(y: labelAppeared ? (labelFloat ? -4 : 4) : 12)
+                    .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: labelFloat)
+
+                stars
+            }
+            .frame(height: 200)
 
             Spacer()
 
@@ -34,39 +45,36 @@ struct OnboardingRatingView: View {
             }
             .padding(.bottom, 32)
 
-            VStack(spacing: 12) {
-                Button {
-                    hasRated = true
-                    requestReview()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "star.fill")
-                            .font(.system(size: 15, weight: .bold))
-                        Text(hasRated ? "Thanks for rating" : "Rate 5 Stars")
-                            .font(.headline)
-                    }
+            Button(action: onContinue) {
+                Text("Next")
+                    .font(.headline)
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
                     .background(Color("AccentGreen"))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .padding(.horizontal, 24)
-
-                Button(action: onContinue) {
-                    Text(hasRated ? "Continue" : "Next")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.secondary)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity)
-                }
-                .padding(.horizontal, 24)
             }
+            .padding(.horizontal, 24)
 
             Spacer().frame(height: 16)
         }
-        .onAppear { animateStars() }
+        .onAppear {
+            animateStars()
+            // Show the "Rate 5 Stars" label after stars finish animating
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                withAnimation(.easeOut(duration: 0.5)) {
+                    labelAppeared = true
+                }
+                // Start the gentle float after it appears
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    labelFloat = true
+                }
+            }
+            // Auto-present the App Store rating dialog after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                requestReview()
+            }
+        }
     }
 
     private var stars: some View {
