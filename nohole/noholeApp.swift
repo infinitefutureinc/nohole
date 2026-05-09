@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 @main
 struct noholeApp: App {
@@ -14,6 +15,9 @@ struct noholeApp: App {
                 }
             }
             .preferredColorScheme(.dark)
+            .task {
+                try? await SKAdNetwork.updatePostbackConversionValue(0)
+            }
         }
     }
 }
