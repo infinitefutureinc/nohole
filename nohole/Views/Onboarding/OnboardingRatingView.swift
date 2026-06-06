@@ -10,6 +10,7 @@ struct OnboardingRatingView: View {
     @State private var pulse: Bool = false
     @State private var labelAppeared: Bool = false
     @State private var labelFloat: Bool = false
+    @State private var reviewPrompted: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -55,6 +56,9 @@ struct OnboardingRatingView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             .padding(.horizontal, 24)
+            .disabled(!reviewPrompted)
+            .opacity(reviewPrompted ? 1 : 0.4)
+            .animation(.easeInOut(duration: 0.3), value: reviewPrompted)
 
             Spacer().frame(height: 16)
         }
@@ -70,9 +74,11 @@ struct OnboardingRatingView: View {
                     labelFloat = true
                 }
             }
-            // Auto-present the App Store rating dialog after a short delay
+            // Auto-present the App Store rating dialog after a short delay,
+            // and only then unlock the Next button.
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 requestReview()
+                reviewPrompted = true
             }
         }
     }
