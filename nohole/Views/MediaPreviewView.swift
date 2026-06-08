@@ -331,7 +331,9 @@ struct MediaPreviewView: View {
             errorMessage = "Failed to load video"
             return
         }
-        
+
+        errorMessage = nil
+
         do {
             let outputURL = try await videoProcessor.processVideo(
                 asset: avAsset,
