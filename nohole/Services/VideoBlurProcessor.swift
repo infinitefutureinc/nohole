@@ -184,21 +184,17 @@ final class VideoBlurProcessor {
 
     private func startProgressUpdates(for exportSession: AVAssetExportSession) {
         progressTask?.cancel()
+        // The async export(to:as:) API does not update the legacy `progress`/`status`
+        // properties — they stay at 0/.waiting for the whole export, which made long
+        // videos appear stuck at 0%. Observe the states stream for real progress.
         progressTask = Task { [weak self] in
-            while let self, !Task.isCancelled {
-                let currentProgress = Double(exportSession.progress)
+            for await state in exportSession.states(updateInterval: 0.15) {
+                guard let self, !Task.isCancelled else { return }
+                guard case .exporting(let progress) = state else { continue }
+                let fraction = progress.fractionCompleted
                 await MainActor.run {
-                    self.progress = max(self.progress, currentProgress)
+                    self.progress = max(self.progress, fraction)
                 }
-
-                switch exportSession.status {
-                case .completed, .failed, .cancelled:
-                    return
-                default:
-                    break
-                }
-
-                try? await Task.sleep(nanoseconds: 150_000_000)
             }
         }
     }
