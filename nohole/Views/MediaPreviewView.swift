@@ -273,8 +273,9 @@ struct MediaPreviewView: View {
             library.requestImage(for: item.asset, targetSize: size) { image in
                 self.originalImage = image
             }
-            // Pre-load the AVAsset
+            // Pre-load the AVAsset, then start processing automatically.
             avAsset = await library.requestAVAsset(for: item.asset)
+            await processVideo()
         }
     }
     
