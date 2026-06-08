@@ -127,21 +127,38 @@ final class VideoBlurProcessor {
         maskScale: Double
     ) -> AVVideoComposition {
         let faceStabilizer = TemporalFaceStabilizer()
+        // The watermark is identical for every frame, so render it once and reuse it.
+        // Rebuilding it per frame allocated a full-resolution bitmap thousands of
+        // times, spiking peak memory on low-RAM devices. Precomputed (not cached in a
+        // captured var) because AVFoundation may invoke this handler concurrently.
+        let watermark = WatermarkRenderer.createWatermarkOverlay(for: renderSize)
 
         return AVVideoComposition(asset: asset) { [self] request in
-            if self.isCancelled {
-                request.finish(with: VideoProcessingError.cancelled)
-                return
-            }
+            autoreleasepool {
+                if self.isCancelled {
+                    request.finish(with: VideoProcessingError.cancelled)
+                    return
+                }
 
-            let sourceImage = request.sourceImage
+                let sourceImage = request.sourceImage
 
-            do {
-                let detectedFaces = try FaceDetectionService.detectFaces(in: sourceImage)
-                let faces = faceStabilizer.stabilizedFaces(
-                    from: detectedFaces,
-                    at: request.compositionTime
-                )
+                let faces: [DetectedFace]
+                do {
+                    let detectedFaces = try FaceDetectionService.detectFaces(in: sourceImage)
+                    faces = faceStabilizer.stabilizedFaces(
+                        from: detectedFaces,
+                        at: request.compositionTime
+                    )
+                } catch {
+                    // Don't abort the entire export because one frame's detection
+                    // failed (e.g. transient inference-context allocation failure
+                    // under memory pressure). Pass the frame through unblurred.
+                    self.logger.error(
+                        "Face detection failed at \(request.compositionTime.seconds, privacy: .public)s, passing frame through: \(error.localizedDescription, privacy: .public)"
+                    )
+                    faces = []
+                }
+
                 var processedImage = ImageBlurProcessor.blurFaces(
                     in: sourceImage,
                     faces: faces,
@@ -150,7 +167,7 @@ final class VideoBlurProcessor {
                     maskScale: maskScale
                 ) ?? sourceImage
 
-                if let watermark = WatermarkRenderer.createWatermarkOverlay(for: sourceImage.extent.size) {
+                if let watermark {
                     let positioned = watermark.transformed(
                         by: CGAffineTransform(
                             translationX: sourceImage.extent.origin.x,
@@ -161,11 +178,6 @@ final class VideoBlurProcessor {
                 }
 
                 request.finish(with: processedImage.cropped(to: sourceImage.extent), context: self.ciContext)
-            } catch {
-                self.logger.error(
-                    "Failed to process frame at \(request.compositionTime.seconds, privacy: .public)s: \(error.localizedDescription, privacy: .public)"
-                )
-                request.finish(with: error)
             }
         }
     }
