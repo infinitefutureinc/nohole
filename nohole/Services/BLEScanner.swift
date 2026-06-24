@@ -1,6 +1,16 @@
 import Foundation
 import CoreBluetooth
 
+struct NearbyDevice: Identifiable {
+    let id: String  // peripheral UUID
+    var name: String?
+    var companyID: UInt16?
+    var rssi: Int
+    var matched: Bool
+    var reason: String
+    var lastSeen: Date
+}
+
 @Observable
 final class BLEScanner: NSObject, CBCentralManagerDelegate {
     var isScanning: Bool = false
@@ -8,9 +18,11 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
     var detections: [DetectionEvent] = []
     var latestDetection: DetectionEvent?
     var rssiThreshold: Int = SmartGlassesHeuristics.defaultRSSIThreshold
+    var nearbyDevices: [NearbyDevice] = []
 
     private var centralManager: CBCentralManager?
     private var cooldownTimestamps: [String: Date] = [:]
+    private var nearbyDeviceIndex: [String: Int] = [:]  // id -> index in nearbyDevices
     private var wantsToScan: Bool = false
 
     // MARK: - Public
@@ -28,6 +40,8 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
         wantsToScan = false
         centralManager?.stopScan()
         isScanning = false
+        nearbyDevices.removeAll()
+        nearbyDeviceIndex.removeAll()
     }
 
     func clearDetections() {
@@ -86,18 +100,57 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
         manufacturerData: Data?,
         rssi: Int
     ) {
-        guard rssi >= rssiThreshold else { return }
+        let companyID = manufacturerData.flatMap { extractCompanyID(from: $0) }
 
-        var glassesType: DetectionEvent.GlassesType?
+        // Classify this device
+        let matched: Bool
+        let reason: String
 
-        // Check company ID from manufacturer data
-        if let data = manufacturerData, let companyID = extractCompanyID(from: data) {
-            if SmartGlassesHeuristics.allKnownCompanyIDs.contains(companyID) {
-                glassesType = SmartGlassesHeuristics.classifyCompanyID(companyID)
+        if let cid = companyID, SmartGlassesHeuristics.allKnownCompanyIDs.contains(cid) {
+            matched = true
+            reason = SmartGlassesHeuristics.classifyCompanyID(cid).rawValue
+        } else if let n = name, SmartGlassesHeuristics.matchesKnownName(n) {
+            matched = true
+            reason = "Name match"
+        } else {
+            matched = false
+            reason = ""
+        }
+
+        // Update nearby devices list (one entry per peripheral, deduplicated)
+        if name != nil || companyID != nil {
+            if let idx = nearbyDeviceIndex[identifier] {
+                nearbyDevices[idx].rssi = rssi
+                nearbyDevices[idx].lastSeen = Date()
+                nearbyDevices[idx].matched = matched
+                nearbyDevices[idx].reason = reason
+                if let name { nearbyDevices[idx].name = name }
+                if let companyID { nearbyDevices[idx].companyID = companyID }
+            } else {
+                let device = NearbyDevice(
+                    id: identifier,
+                    name: name,
+                    companyID: companyID,
+                    rssi: rssi,
+                    matched: matched,
+                    reason: reason,
+                    lastSeen: Date()
+                )
+                nearbyDevices.append(device)
+                nearbyDeviceIndex[identifier] = nearbyDevices.count - 1
             }
         }
 
-        // Check device name
+        // Detection logic
+        guard rssi >= rssiThreshold else { return }
+        guard matched else { return }
+
+        var glassesType: DetectionEvent.GlassesType?
+
+        if let cid = companyID, SmartGlassesHeuristics.allKnownCompanyIDs.contains(cid) {
+            glassesType = SmartGlassesHeuristics.classifyCompanyID(cid)
+        }
+
         if glassesType == nil, let name = name, SmartGlassesHeuristics.matchesKnownName(name) {
             glassesType = .metaRayBan
         }
@@ -109,7 +162,7 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
             id: UUID(),
             timestamp: Date(),
             deviceName: name,
-            companyID: manufacturerData.flatMap { extractCompanyID(from: $0) },
+            companyID: companyID,
             rssi: rssi,
             glassesType: type
         )
