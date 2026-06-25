@@ -21,9 +21,13 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
     var nearbyDevices: [NearbyDevice] = []
 
     private var centralManager: CBCentralManager?
-    private var cooldownTimestamps: [String: Date] = [:]
     private var nearbyDeviceIndex: [String: Int] = [:]  // id -> index in nearbyDevices
     private var wantsToScan: Bool = false
+
+    // Drop nearby devices not re-advertised within this window. BLE devices using
+    // resolvable private addresses rotate their identity periodically; without this
+    // the list grows unbounded as one physical device cycles through addresses.
+    private static let staleInterval: TimeInterval = 15.0
 
     // MARK: - Public
 
@@ -100,6 +104,8 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
         manufacturerData: Data?,
         rssi: Int
     ) {
+        pruneStaleDevices()
+
         let companyID = manufacturerData.flatMap { extractCompanyID(from: $0) }
 
         // Classify this device
@@ -156,10 +162,19 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
         }
 
         guard let type = glassesType else { return }
-        guard shouldAlertForDevice(identifier) else { return }
+        guard let fingerprint = detectionFingerprint(companyID: companyID, name: name) else { return }
+
+        // One physical pair of glasses rotates its BLE address, so dedup on the
+        // fingerprint (stable company ID / name) rather than the peripheral UUID.
+        if let idx = detections.firstIndex(where: { $0.fingerprint == fingerprint }) {
+            detections[idx].rssi = rssi
+            detections[idx].timestamp = Date()
+            return
+        }
 
         let event = DetectionEvent(
             id: UUID(),
+            fingerprint: fingerprint,
             timestamp: Date(),
             deviceName: name,
             companyID: companyID,
@@ -169,18 +184,37 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
 
         detections.insert(event, at: 0)
         latestDetection = event
-        cooldownTimestamps[identifier] = Date()
+    }
+
+    // Stable identity for a matched device across BLE address rotations.
+    // Company IDs are Bluetooth-SIG-assigned and do not rotate; fall back to the
+    // advertised name. Note: two different people wearing the same brand with no
+    // distinguishing name will share a fingerprint and count as one.
+    private func detectionFingerprint(companyID: UInt16?, name: String?) -> String? {
+        if let cid = companyID, SmartGlassesHeuristics.allKnownCompanyIDs.contains(cid) {
+            return "cid:\(cid)"
+        }
+        if let name, SmartGlassesHeuristics.matchesKnownName(name) {
+            return "name:\(name.lowercased())"
+        }
+        return nil
+    }
+
+    private func pruneStaleDevices() {
+        let cutoff = Date().addingTimeInterval(-Self.staleInterval)
+        let countBefore = nearbyDevices.count
+        nearbyDevices.removeAll { $0.lastSeen < cutoff }
+        guard nearbyDevices.count != countBefore else { return }
+        nearbyDeviceIndex.removeAll()
+        for (i, device) in nearbyDevices.enumerated() {
+            nearbyDeviceIndex[device.id] = i
+        }
     }
 
     private func extractCompanyID(from data: Data) -> UInt16? {
         guard data.count >= 2 else { return nil }
-        return data.withUnsafeBytes { buffer in
-            buffer.load(as: UInt16.self) // Little-endian per BT spec
-        }
-    }
-
-    private func shouldAlertForDevice(_ identifier: String) -> Bool {
-        guard let lastAlert = cooldownTimestamps[identifier] else { return true }
-        return Date().timeIntervalSince(lastAlert) >= SmartGlassesHeuristics.defaultCooldownInterval
+        // Little-endian per BT spec. Read byte-wise to avoid alignment traps on
+        // unaligned Data slices.
+        return UInt16(data[data.startIndex]) | (UInt16(data[data.startIndex + 1]) << 8)
     }
 }

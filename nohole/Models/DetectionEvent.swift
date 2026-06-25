@@ -3,10 +3,12 @@ import SwiftUI
 
 struct DetectionEvent: Identifiable, Hashable {
     let id: UUID
-    let timestamp: Date
+    // Stable identity for one physical device across BLE address rotations.
+    let fingerprint: String
+    var timestamp: Date
     let deviceName: String?
     let companyID: UInt16?
-    let rssi: Int
+    var rssi: Int
     let glassesType: GlassesType
 
     enum GlassesType: String, CaseIterable {

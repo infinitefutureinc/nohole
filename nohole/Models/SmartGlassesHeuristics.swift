@@ -25,7 +25,6 @@ enum SmartGlassesHeuristics {
     ]
 
     static let defaultRSSIThreshold: Int = -75
-    static let defaultCooldownInterval: TimeInterval = 10.0
 
     static func classifyCompanyID(_ id: UInt16) -> DetectionEvent.GlassesType {
         if metaCompanyIDs.contains(id) { return .metaRayBan }
