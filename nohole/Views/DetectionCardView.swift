@@ -51,6 +51,7 @@ struct DetectionCardView: View {
     VStack(spacing: 12) {
         DetectionCardView(event: DetectionEvent(
             id: UUID(),
+            fingerprint: "cid:427",
             timestamp: Date(),
             deviceName: "Ray-Ban | Meta",
             companyID: 0x01AB,
@@ -59,6 +60,7 @@ struct DetectionCardView: View {
         ))
         DetectionCardView(event: DetectionEvent(
             id: UUID(),
+            fingerprint: "cid:962",
             timestamp: Date().addingTimeInterval(-120),
             deviceName: nil,
             companyID: 0x03C2,

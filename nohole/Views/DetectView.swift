@@ -5,6 +5,7 @@ struct DetectView: View {
     @State var scanner = BLEScanner()
     @Environment(\.scenePhase) private var scenePhase
     @State private var detectionTrigger: UUID?
+    @State private var showNearbyDevices = false
 
     var body: some View {
         NavigationStack {
@@ -33,6 +34,9 @@ struct DetectView: View {
                         }
                     }
                 }
+            }
+            .sheet(isPresented: $showNearbyDevices) {
+                nearbyDevicesView
             }
         }
         .tint(.white)
@@ -87,9 +91,15 @@ struct DetectView: View {
                         Text("Looking for glassholes...")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                        Text("Stay in the app while scanning")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                        if scanner.nearbyDevices.count > 0 {
+                            Button {
+                                showNearbyDevices = true
+                            } label: {
+                                Text("Scanning \(scanner.nearbyDevices.count) device\(scanner.nearbyDevices.count == 1 ? "" : "s") nearby")
+                                    .font(.caption)
+                                    .foregroundStyle(Color("AccentGreen"))
+                            }
+                        }
                     }
                     .padding(.top, 8)
                 } else {
@@ -244,6 +254,66 @@ struct DetectView: View {
 
             Spacer()
         }
+    }
+
+    // MARK: - Nearby Devices
+
+    private var nearbyDevicesView: some View {
+        NavigationStack {
+            Group {
+                if scanner.nearbyDevices.isEmpty {
+                    ContentUnavailableView(
+                        "No Devices Yet",
+                        systemImage: "antenna.radiowaves.left.and.right",
+                        description: Text("Start scanning to see all nearby BLE devices.")
+                    )
+                } else {
+                    List(scanner.nearbyDevices) { device in
+                        nearbyDeviceRow(device)
+                    }
+                }
+            }
+            .navigationTitle("Nearby Devices")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        showNearbyDevices = false
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func nearbyDeviceRow(_ device: NearbyDevice) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(device.name ?? "Unknown")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Spacer()
+                Text("\(device.rssi) dBm")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(device.rssi >= scanner.rssiThreshold ? Color.primary : Color.red)
+            }
+            HStack {
+                if let cid = device.companyID {
+                    Text("CID: 0x\(String(cid, radix: 16, uppercase: true))")
+                        .font(.caption2.monospaced())
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if device.matched {
+                    Text(device.reason)
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundStyle(Color("AccentGreen"))
+                }
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
 
