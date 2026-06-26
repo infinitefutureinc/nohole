@@ -2,8 +2,8 @@ import SwiftUI
 import CoreBluetooth
 
 struct DetectView: View {
-    @State var scanner = BLEScanner()
-    @Environment(\.scenePhase) private var scenePhase
+    @Environment(BLEScanner.self) private var scanner
+    @Environment(RadarController.self) private var radar
     @State private var detectionTrigger: UUID?
     @State private var showNearbyDevices = false
 
@@ -40,9 +40,11 @@ struct DetectView: View {
             }
         }
         .tint(.white)
-        .onChange(of: scenePhase) { _, phase in
-            if phase != .active && scanner.isScanning {
-                scanner.stopScanning()
+        .onAppear {
+            if !radar.isActive && scanner.bluetoothState != .unauthorized
+                && scanner.bluetoothState != .unsupported
+                && scanner.bluetoothState != .poweredOff {
+                Task { await radar.start() }
             }
         }
         .sensoryFeedback(.warning, trigger: detectionTrigger)
@@ -139,13 +141,13 @@ struct DetectView: View {
     }
 
     private var statusColor: Color {
-        if scanner.isScanning { return Color("AccentGreen") }
+        if radar.isActive { return Color("AccentGreen") }
         if scanner.bluetoothState == .poweredOn { return .secondary }
         return .red
     }
 
     private var statusText: String {
-        if scanner.isScanning { return "Scanning" }
+        if radar.isActive { return "Scanning" }
         if scanner.bluetoothState == .poweredOn { return "Ready" }
         if scanner.bluetoothState == .unknown { return "Initializing" }
         return "Unavailable"
@@ -153,24 +155,26 @@ struct DetectView: View {
 
     private var scanButton: some View {
         Button {
-            if scanner.isScanning {
-                scanner.stopScanning()
-            } else {
-                scanner.startScanning()
+            Task {
+                if radar.isActive {
+                    await radar.stop()
+                } else {
+                    await radar.start()
+                }
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: scanner.isScanning
+                Image(systemName: radar.isActive
                     ? "stop.circle.fill"
                     : "antenna.radiowaves.left.and.right")
                     .font(.body.weight(.semibold))
-                Text(scanner.isScanning ? "Stop Scan" : "Start Scan")
+                Text(radar.isActive ? "Stop Scan" : "Start Scan")
                     .fontWeight(.bold)
             }
-            .foregroundStyle(scanner.isScanning ? .white : .black)
+            .foregroundStyle(radar.isActive ? .white : .black)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(scanner.isScanning ? Color(.systemGray4) : Color("AccentGreen"))
+            .background(radar.isActive ? Color(.systemGray4) : Color("AccentGreen"))
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
         .padding(.horizontal)
@@ -319,5 +323,7 @@ struct DetectView: View {
 
 #Preview {
     DetectView()
+        .environment(RadarController.shared)
+        .environment(BLEScanner.shared)
         .preferredColorScheme(.dark)
 }

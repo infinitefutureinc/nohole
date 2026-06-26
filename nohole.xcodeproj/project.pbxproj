@@ -6,11 +6,58 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D468EE592FECFAAC002289DC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D468EE582FECFAAC002289DC /* WidgetKit.framework */; };
+		D468EE5B2FECFAAC002289DC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D468EE5A2FECFAAC002289DC /* SwiftUI.framework */; };
+		D468EE682FECFAAE002289DC /* noholeRadarWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D468EE562FECFAAC002289DC /* noholeRadarWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D468EE662FECFAAE002289DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D46A8CF82F6E78BB00F1030D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D468EE552FECFAAC002289DC;
+			remoteInfo = noholeRadarWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D468EE6D2FECFAAE002289DC /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D468EE682FECFAAE002289DC /* noholeRadarWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		D468EE562FECFAAC002289DC /* noholeRadarWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = noholeRadarWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D468EE582FECFAAC002289DC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		D468EE5A2FECFAAC002289DC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		D46A8D002F6E78BB00F1030D /* nohole.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nohole.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D468EE6C2FECFAAE002289DC /* Exceptions for "noholeRadarWidget" folder in "noholeRadarWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D468EE552FECFAAC002289DC /* noholeRadarWidgetExtension */;
+		};
+		D468EE712FECFB4C002289DC /* Exceptions for "nohole" folder in "noholeRadarWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/RadarActivityAttributes.swift,
+			);
+			target = D468EE552FECFAAC002289DC /* noholeRadarWidgetExtension */;
+		};
 		D481641C2FAB3DDC00476B95 /* Exceptions for "nohole" folder in "nohole" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -21,10 +68,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		D468EE5C2FECFAAC002289DC /* noholeRadarWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D468EE6C2FECFAAE002289DC /* Exceptions for "noholeRadarWidget" folder in "noholeRadarWidgetExtension" target */,
+			);
+			path = noholeRadarWidget;
+			sourceTree = "<group>";
+		};
 		D46A8D022F6E78BB00F1030D /* nohole */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				D481641C2FAB3DDC00476B95 /* Exceptions for "nohole" folder in "nohole" target */,
+				D468EE712FECFB4C002289DC /* Exceptions for "nohole" folder in "noholeRadarWidgetExtension" target */,
 			);
 			path = nohole;
 			sourceTree = "<group>";
@@ -32,6 +88,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D468EE532FECFAAC002289DC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D468EE5B2FECFAAC002289DC /* SwiftUI.framework in Frameworks */,
+				D468EE592FECFAAC002289DC /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D46A8CFD2F6E78BB00F1030D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -42,10 +107,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D468EE572FECFAAC002289DC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D468EE582FECFAAC002289DC /* WidgetKit.framework */,
+				D468EE5A2FECFAAC002289DC /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		D46A8CF72F6E78BB00F1030D = {
 			isa = PBXGroup;
 			children = (
 				D46A8D022F6E78BB00F1030D /* nohole */,
+				D468EE5C2FECFAAC002289DC /* noholeRadarWidget */,
+				D468EE572FECFAAC002289DC /* Frameworks */,
 				D46A8D012F6E78BB00F1030D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				D46A8D002F6E78BB00F1030D /* nohole.app */,
+				D468EE562FECFAAC002289DC /* noholeRadarWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,6 +138,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D468EE552FECFAAC002289DC /* noholeRadarWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D468EE692FECFAAE002289DC /* Build configuration list for PBXNativeTarget "noholeRadarWidgetExtension" */;
+			buildPhases = (
+				D468EE522FECFAAC002289DC /* Sources */,
+				D468EE532FECFAAC002289DC /* Frameworks */,
+				D468EE542FECFAAC002289DC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D468EE5C2FECFAAC002289DC /* noholeRadarWidget */,
+			);
+			name = noholeRadarWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = noholeRadarWidgetExtension;
+			productReference = D468EE562FECFAAC002289DC /* noholeRadarWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		D46A8CFF2F6E78BB00F1030D /* nohole */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D46A8D0D2F6E78BC00F1030D /* Build configuration list for PBXNativeTarget "nohole" */;
@@ -68,10 +167,12 @@
 				D46A8CFC2F6E78BB00F1030D /* Sources */,
 				D46A8CFD2F6E78BB00F1030D /* Frameworks */,
 				D46A8CFE2F6E78BB00F1030D /* Resources */,
+				D468EE6D2FECFAAE002289DC /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D468EE672FECFAAE002289DC /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D46A8D022F6E78BB00F1030D /* nohole */,
@@ -93,6 +194,9 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					D468EE552FECFAAC002289DC = {
+						CreatedOnToolsVersion = 26.3;
+					};
 					D46A8CFF2F6E78BB00F1030D = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -113,11 +217,19 @@
 			projectRoot = "";
 			targets = (
 				D46A8CFF2F6E78BB00F1030D /* nohole */,
+				D468EE552FECFAAC002289DC /* noholeRadarWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D468EE542FECFAAC002289DC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D46A8CFE2F6E78BB00F1030D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -128,6 +240,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D468EE522FECFAAC002289DC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D46A8CFC2F6E78BB00F1030D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -137,7 +256,75 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D468EE672FECFAAE002289DC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D468EE552FECFAAC002289DC /* noholeRadarWidgetExtension */;
+			targetProxy = D468EE662FECFAAE002289DC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		D468EE6A2FECFAAE002289DC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YF9NFZN8G5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = noholeRadarWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = noholeRadarWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.infinitefuture.nohole.noholeRadarWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D468EE6B2FECFAAE002289DC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YF9NFZN8G5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = noholeRadarWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = noholeRadarWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.infinitefuture.nohole.noholeRadarWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		D46A8D0B2F6E78BC00F1030D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -350,6 +537,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D468EE692FECFAAE002289DC /* Build configuration list for PBXNativeTarget "noholeRadarWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D468EE6A2FECFAAE002289DC /* Debug */,
+				D468EE6B2FECFAAE002289DC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D46A8CFB2F6E78BB00F1030D /* Build configuration list for PBXProject "nohole" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

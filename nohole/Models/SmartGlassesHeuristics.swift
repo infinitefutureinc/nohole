@@ -1,4 +1,5 @@
 import Foundation
+import CoreBluetooth
 
 enum SmartGlassesHeuristics {
     // Bluetooth SIG assigned company IDs
@@ -15,6 +16,15 @@ enum SmartGlassesHeuristics {
 
     static let allKnownCompanyIDs: Set<UInt16> =
         metaCompanyIDs.union(essilorCompanyIDs).union(snapCompanyIDs)
+
+    // BLE 16-bit service UUIDs advertised by smart glasses.
+    // Required for CoreBluetooth background scanning — iOS ignores
+    // scanForPeripherals(withServices: nil) when the app is backgrounded.
+    static let knownServiceUUIDs: [CBUUID] = [
+        CBUUID(string: "FD5F"),  // Oculus VR / Meta (Ray-Ban Meta glasses)
+        CBUUID(string: "FEB7"),  // Meta Platforms, Inc.
+        CBUUID(string: "FEB8"),  // Meta Platforms, Inc.
+    ]
 
     // BLE advertised name patterns (case-insensitive)
     static let knownNamePatterns = [
