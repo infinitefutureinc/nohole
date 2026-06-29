@@ -30,16 +30,16 @@ struct RadarLiveActivity: Widget {
                 }
             } compactLeading: {
                 Image(systemName: "eyeglasses")
-                    .foregroundStyle(ctx.state.detectedGlassesCount > 0 ? .red : accentGreen)
+                    .foregroundStyle(ctx.state.nearbyGlassesCount > 0 ? .red : accentGreen)
             } compactTrailing: {
-                Text("\(ctx.state.detectedGlassesCount)")
+                Text("\(ctx.state.nearbyGlassesCount)")
                     .monospacedDigit()
                     .fontWeight(.bold)
-                    .foregroundStyle(ctx.state.detectedGlassesCount > 0 ? .red : accentGreen)
+                    .foregroundStyle(ctx.state.nearbyGlassesCount > 0 ? .red : accentGreen)
             } minimal: {
                 Image(systemName: "eyeglasses")
                     .font(.caption)
-                    .foregroundStyle(ctx.state.detectedGlassesCount > 0 ? .red : accentGreen)
+                    .foregroundStyle(ctx.state.nearbyGlassesCount > 0 ? .red : accentGreen)
             }
             .keylineTint(accentGreen)
         }
@@ -50,7 +50,7 @@ struct RadarLiveActivity: Widget {
 
 private struct LockScreenView: View {
     let state: RadarActivityAttributes.ContentState
-    private var alert: Bool { state.detectedGlassesCount > 0 }
+    private var alert: Bool { state.nearbyGlassesCount > 0 }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -71,10 +71,27 @@ private struct LockScreenView: View {
             Spacer(minLength: 0)
 
             if alert {
-                Text("\(state.detectedGlassesCount)")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.red)
+                VStack(spacing: 2) {
+                    Text("\(state.nearbyGlassesCount)")
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.red)
+                    if state.totalEncountered > state.nearbyGlassesCount {
+                        Text("\(state.totalEncountered) total")
+                            .font(.caption2)
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                }
+            } else if state.totalEncountered > 0 {
+                VStack(spacing: 2) {
+                    Text("\(state.totalEncountered)")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.white.opacity(0.4))
+                    Text("seen")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.3))
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -82,10 +99,11 @@ private struct LockScreenView: View {
     }
 
     private var headline: String {
-        switch state.detectedGlassesCount {
+        switch state.nearbyGlassesCount {
+        case 0 where state.totalEncountered > 0: "All clear now"
         case 0: "All clear"
         case 1: "1 glasshole nearby"
-        default: "\(state.detectedGlassesCount) glassholes nearby"
+        default: "\(state.nearbyGlassesCount) glassholes nearby"
         }
     }
 }
@@ -94,7 +112,7 @@ private struct LockScreenView: View {
 
 private struct StatusDot: View {
     let state: RadarActivityAttributes.ContentState
-    private var alert: Bool { state.detectedGlassesCount > 0 }
+    private var alert: Bool { state.nearbyGlassesCount > 0 }
 
     var body: some View {
         HStack(spacing: 4) {
@@ -110,15 +128,15 @@ private struct StatusDot: View {
 
 private struct CenterContent: View {
     let state: RadarActivityAttributes.ContentState
-    private var alert: Bool { state.detectedGlassesCount > 0 }
+    private var alert: Bool { state.nearbyGlassesCount > 0 }
 
     var body: some View {
         VStack(spacing: 2) {
-            Text("\(state.detectedGlassesCount)")
+            Text("\(state.nearbyGlassesCount)")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(alert ? .red : accentGreen)
-            Text(alert ? "DETECTED" : "ALL CLEAR")
+            Text(alert ? "NEARBY" : "ALL CLEAR")
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(.secondary)
         }
@@ -127,7 +145,7 @@ private struct CenterContent: View {
 
 private struct InfoLine: View {
     let state: RadarActivityAttributes.ContentState
-    private var alert: Bool { state.detectedGlassesCount > 0 }
+    private var alert: Bool { state.nearbyGlassesCount > 0 }
 
     var body: some View {
         if alert, let lastSeen = state.lastDetectionAt {
@@ -159,15 +177,21 @@ extension RadarActivityAttributes {
 
 extension RadarActivityAttributes.ContentState {
     fileprivate static var allClear: RadarActivityAttributes.ContentState {
-        .init(detectedGlassesCount: 0,
-              lastDetectionAt: nil,
-              nearbyDeviceCount: 5)
+        .init(nearbyGlassesCount: 0,
+              totalEncountered: 0,
+              lastDetectionAt: nil)
     }
 
     fileprivate static var detected: RadarActivityAttributes.ContentState {
-        .init(detectedGlassesCount: 1,
-              lastDetectionAt: Date().addingTimeInterval(-47),
-              nearbyDeviceCount: 8)
+        .init(nearbyGlassesCount: 1,
+              totalEncountered: 1,
+              lastDetectionAt: Date().addingTimeInterval(-47))
+    }
+
+    fileprivate static var stale: RadarActivityAttributes.ContentState {
+        .init(nearbyGlassesCount: 0,
+              totalEncountered: 2,
+              lastDetectionAt: Date().addingTimeInterval(-180))
     }
 }
 
@@ -176,5 +200,6 @@ extension RadarActivityAttributes.ContentState {
 } contentStates: {
     RadarActivityAttributes.ContentState.allClear
     RadarActivityAttributes.ContentState.detected
+    RadarActivityAttributes.ContentState.stale
 }
 

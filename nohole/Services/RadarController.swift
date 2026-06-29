@@ -1,5 +1,6 @@
 import ActivityKit
 import Foundation
+import SwiftUI
 import os
 
 @Observable @MainActor
@@ -32,17 +33,16 @@ final class RadarController {
         // without waiting for the main actor (which is throttled in background).
         // This closure runs on the BLE serial queue — no main actor hop needed.
         let activityRef = activity
-        scanner.onDetectionChanged = { [weak self] count, lastAt in
+        scanner.onDetectionChanged = { [weak self] nearby, total, lastAt in
             guard let activityRef else { return }
-            Self.log.info("BLE queue detection callback: count=\(count) lastAt=\(String(describing: lastAt))")
+            Self.log.info("BLE queue detection callback: nearby=\(nearby) total=\(total)")
             let state = RadarActivityAttributes.ContentState(
-                detectedGlassesCount: count,
-                lastDetectionAt: lastAt,
-                nearbyDeviceCount: 0  // approximate; nearby count is cosmetic
+                nearbyGlassesCount: nearby,
+                totalEncountered: total,
+                lastDetectionAt: lastAt
             )
             let content = ActivityContent(state: state,
                                           staleDate: Date().addingTimeInterval(300))
-            // Activity.update is sendable and safe to call from any queue.
             Task { await activityRef.update(content) }
         }
 
@@ -60,23 +60,41 @@ final class RadarController {
         isActive = false
     }
 
+    /// Call when the app enters/leaves foreground so the scan filter switches
+    /// between wildcard (all devices visible) and service-UUID-only (background-safe).
+    func scenePhaseChanged(to phase: ScenePhase) {
+        guard isActive else { return }
+        switch phase {
+        case .active:
+            scanner.setBackgroundSafeFilter(false)
+        case .inactive, .background:
+            scanner.setBackgroundSafeFilter(true)
+        @unknown default:
+            break
+        }
+    }
+
     // MARK: - Detection Observer
 
     /// Polls for detection changes every 2s and pushes LA updates from main actor.
     /// This is the foreground path — ensures the LA stays in sync with the full
-    /// @Observable state when the main actor is responsive.
+    /// @Observable state when the main actor is responsive. Also handles updating
+    /// the nearby count as detections go stale.
     private func startDetectionObserver() {
         detectionObserver?.cancel()
         detectionObserver = Task { [weak self] in
-            var lastCount = 0
+            var lastNearby = 0
+            var lastTotal = 0
             var lastDate: Date?
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(2))
                 guard !Task.isCancelled, let self else { return }
-                let currentCount = self.scanner.detections.count
+                let currentNearby = self.scanner.nearbyGlassesCount
+                let currentTotal = self.scanner.detections.count
                 let currentDate = self.scanner.lastDetectionAt
-                if currentCount != lastCount || currentDate != lastDate {
-                    lastCount = currentCount
+                if currentNearby != lastNearby || currentTotal != lastTotal || currentDate != lastDate {
+                    lastNearby = currentNearby
+                    lastTotal = currentTotal
                     lastDate = currentDate
                     await self.pushUpdate()
                 }
@@ -108,8 +126,8 @@ final class RadarController {
     }
 
     private func makeState() -> RadarActivityAttributes.ContentState {
-        .init(detectedGlassesCount: scanner.detections.count,
-              lastDetectionAt: scanner.lastDetectionAt,
-              nearbyDeviceCount: scanner.nearbyDevices.count)
+        .init(nearbyGlassesCount: scanner.nearbyGlassesCount,
+              totalEncountered: scanner.detections.count,
+              lastDetectionAt: scanner.lastDetectionAt)
     }
 }

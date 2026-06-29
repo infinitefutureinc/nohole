@@ -27,9 +27,18 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
 
     var lastDetectionAt: Date? { latestDetection?.timestamp }
 
+    /// How long since last BLE advertisement before a detection is considered stale.
+    static let detectionStaleInterval: TimeInterval = 30.0
+
+    /// Glasses actively nearby (seen within the stale interval).
+    var nearbyGlassesCount: Int {
+        let cutoff = Date().addingTimeInterval(-Self.detectionStaleInterval)
+        return detections.count(where: { $0.timestamp > cutoff })
+    }
+
     /// Called from the BLE queue when a detection is confirmed.
-    /// RadarController uses this to push Live Activity updates that work in background.
-    nonisolated(unsafe) var onDetectionChanged: ((_ count: Int, _ lastAt: Date?) -> Void)?
+    /// Parameters: (nearbyCount, totalEncountered, lastDetectionAt)
+    nonisolated(unsafe) var onDetectionChanged: ((_ nearby: Int, _ total: Int, _ lastAt: Date?) -> Void)?
 
     private var centralManager: CBCentralManager?
     private var nearbyDeviceIndex: [String: Int] = [:]  // id -> index in nearbyDevices
@@ -75,10 +84,11 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
 
     // MARK: - Window API (used by RadarController)
 
-    /// Begins a background-safe scan using known service UUIDs.
-    /// This ensures CoreBluetooth delivers callbacks even when the app is backgrounded.
+    /// Begins scanning for the radar session. Starts with a wildcard scan (foreground)
+    /// so nearbyDevices populates. Call `setBackgroundSafeFilter(true)` when the app
+    /// moves to background to switch to the service-UUID-filtered scan that iOS allows.
     func beginScanWindow() {
-        useBackgroundSafeFilter = true
+        useBackgroundSafeFilter = false
         wantsToScan = true
         ensureCentralManager()
         if bluetoothState == .poweredOn {
@@ -90,6 +100,16 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
         wantsToScan = false
         centralManager?.stopScan()
         isScanning = false
+    }
+
+    /// Switches between wildcard scan (foreground) and service-UUID-filtered scan (background).
+    /// Restarts the scan if one is already active.
+    func setBackgroundSafeFilter(_ enabled: Bool) {
+        guard useBackgroundSafeFilter != enabled else { return }
+        useBackgroundSafeFilter = enabled
+        if wantsToScan && bluetoothState == .poweredOn {
+            beginScan()
+        }
     }
 
     func flushInWindowCache() {
@@ -213,8 +233,11 @@ final class BLEScanner: NSObject, CBCentralManagerDelegate {
             } else {
                 bgDetections.append(BgDetection(fingerprint: detection.fingerprint, timestamp: detection.timestamp))
             }
-            Self.log.info("Detection: \(detection.fingerprint) total=\(self.bgDetections.count)")
-            onDetectionChanged?(bgDetections.count, detection.timestamp)
+            let total = bgDetections.count
+            let cutoff = Date().addingTimeInterval(-Self.detectionStaleInterval)
+            let nearby = bgDetections.count(where: { $0.timestamp > cutoff })
+            Self.log.info("Detection: \(detection.fingerprint) nearby=\(nearby) total=\(total)")
+            onDetectionChanged?(nearby, total, detection.timestamp)
         }
 
         // Update @Observable state on main actor for UI
